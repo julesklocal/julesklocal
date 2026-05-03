@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JuleskLocal — Community First</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #F5F0E8;
+    --earth: #2C2416;
+    --rust: #C4622D;
+    --sage: #5C7A5A;
+    --gold: #D4A843;
+    --warm-white: #FAF8F4;
+    --muted: #8A7E6E;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--cream);
+    color: var(--earth);
+    font-family: 'DM Sans', sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* GRAIN TEXTURE */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  /* NAV */
+  nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2.5rem;
+    position: sticky;
+    top: 0;
+    background: var(--cream);
+    border-bottom: 1px solid rgba(44,36,22,0.1);
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    color: var(--earth);
+  }
+
+  .logo span { color: var(--rust); }
+
+  nav ul {
+    list-style: none;
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+  }
+
+  nav ul li a {
+    text-decoration: none;
+    color: var(--muted);
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    transition: color 0.2s;
+  }
+
+  nav ul li a:hover { color: var(--earth); }
+
+  .nav-cta {
+    background: var(--rust) !important;
+    color: var(--warm-white) !important;
+    padding: 0.5rem 1.25rem;
+    border-radius: 2rem;
+    transition: opacity 0.2s !important;
+  }
+
+  .nav-cta:hover { opacity: 0.85; }
+
+  /* HERO */
+  .hero {
+    min-height: 90vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    position: relative;
+  }
+
+  .hero-left {
+    padding: 5rem 2.5rem 5rem 2.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  .hero-eyebrow {
+    font-size: 0.8rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--rust);
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.8rem, 5vw, 4.5rem);
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-title em {
+    font-style: italic;
+    color: var(--rust);
+  }
+
+  .hero-sub {
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: var(--muted);
+    max-width: 440px;
+    margin-bottom: 2.5rem;
+    font-weight: 300;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .btn-primary {
+    background: var(--earth);
+    color: var(--cream);
+    padding: 0.85rem 2rem;
+    border-radius: 2rem;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: background 0.2s;
+  }
+
+  .btn-primary:hover { background: var(--rust); }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--earth);
+    padding: 0.85rem 2rem;
+    border-radius: 2rem;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    border: 1.5px solid var(--earth);
+    transition: all 0.2s;
+  }
+
+  .btn-secondary:hover {
+    background: var(--earth);
+    color: var(--cream);
+  }
+
+  .hero-right {
+    background: var(--earth);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    position: relative;
+    overflow: hidden;
+    animation: fadeIn 1s ease 0.2s both;
+  }
+
+  .hero-right::before {
+    content: '';
+    position: absolute;
+    width: 400px;
+    height: 400px;
+    background: var(--rust);
+    border-radius: 50%;
+    opacity: 0.15;
+    top: -100px;
+    right: -100px;
+  }
+
+  .hero-right::after {
+    content: '';
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    background: var(--gold);
+    border-radius: 50%;
+    opacity: 0.08;
+    bottom: -80px;
+    left: -60px;
+  }
+
+  /* FLOATING SERVICE CARDS */
+  .service-float {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    position: relative;
+    z-index: 2;
+    max-width: 380px;
+  }
+
+  .service-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 1rem;
+    padding: 1.25rem;
+    color: var(--warm-white);
+    backdrop-filter: blur(10px);
+    transition: transform 0.3s, background 0.3s;
+    cursor: pointer;
+  }
+
+  .service-card:hover {
+    transform: translateY(-4px);
+    background: rgba(255,255,255,0.1);
+  }
+
+  .service-card.wide {
+    grid-column: 1 / -1;
+  }
+
+  .service-icon {
+    font-size: 1.8rem;
+    margin-bottom: 0.6rem;
+    display: block;
+  }
+
+  .service-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+  }
+
+  .service-card p {
+    font-size: 0.78rem;
+    opacity: 0.6;
+    line-height: 1.5;
+  }
+
+  .service-tag {
+    display: inline-block;
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: var(--rust);
+    color: white;
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.3rem;
+    margin-top: 0.5rem;
+  }
+
+  /* STATS BAR */
+  .stats-bar {
+    background: var(--earth);
+    color: var(--cream);
+    padding: 1.5rem 2.5rem;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .stat {
+    text-align: center;
+  }
+
+  .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--gold);
+    display: block;
+  }
+
+  .stat-label {
+    font-size: 0.78rem;
+    opacity: 0.6;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* SERVICES SECTION */
+  .services {
+    padding: 6rem 2.5rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 4rem;
+  }
+
+  .section-eyebrow {
+    font-size: 0.78rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--rust);
+    font-weight: 500;
+    margin-bottom: 1rem;
+    display: block;
+  }
+
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .svc {
+    background: var(--warm-white);
+    border-radius: 1.25rem;
+    padding: 2rem;
+    border: 1px solid rgba(44,36,22,0.08);
+    transition: transform 0.3s, box-shadow 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .svc::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--rust);
+    transform: scaleX(0);
+    transition: transform 0.3s;
+    transform-origin: left;
+  }
+
+  .svc:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(44,36,22,0.1); }
+  .svc:hover::before { transform: scaleX(1); }
+
+  .svc-icon { font-size: 2rem; margin-bottom: 1rem; display: block; }
+
+  .svc h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 0.6rem;
+  }
+
+  .svc p {
+    font-size: 0.88rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .svc-price {
+    margin-top: 1.25rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--sage);
+  }
+
+  /* HOW IT WORKS */
+  .how {
+    background: var(--earth);
+    color: var(--cream);
+    padding: 6rem 2.5rem;
+  }
+
+  .how-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .how .section-title { color: var(--cream); }
+
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+  }
+
+  .step {
+    position: relative;
+    padding-left: 1rem;
+    border-left: 2px solid var(--rust);
+  }
+
+  .step-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 3rem;
+    font-weight: 900;
+    color: var(--rust);
+    opacity: 0.3;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+
+  .step h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .step p {
+    font-size: 0.85rem;
+    opacity: 0.6;
+    line-height: 1.6;
+  }
+
+  /* BETA SECTION */
+  .beta {
+    padding: 6rem 2.5rem;
+    max-width: 700px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .beta-box {
+    background: var(--warm-white);
+    border-radius: 2rem;
+    padding: 3.5rem;
+    border: 1px solid rgba(44,36,22,0.08);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .beta-box::before {
+    content: 'BETA';
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    background: var(--gold);
+    color: var(--earth);
+    padding: 0.3rem 0.7rem;
+    border-radius: 0.3rem;
+    font-weight: 700;
+  }
+
+  .beta-box h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 900;
+    margin-bottom: 1rem;
+  }
+
+  .beta-box p {
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 2rem;
+    font-size: 0.95rem;
+  }
+
+  .beta-form {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .beta-form input {
+    flex: 1;
+    min-width: 200px;
+    padding: 0.85rem 1.25rem;
+    border: 1.5px solid rgba(44,36,22,0.15);
+    border-radius: 2rem;
+    background: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    color: var(--earth);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .beta-form input:focus { border-color: var(--rust); }
+
+  .beta-form button {
+    background: var(--rust);
+    color: white;
+    border: none;
+    padding: 0.85rem 2rem;
+    border-radius: 2rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+
+  .beta-form button:hover { opacity: 0.85; }
+
+  .beta-perks {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .perk {
+    font-size: 0.78rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .perk::before { content: '✓'; color: var(--sage); font-weight: 700; }
+
+  /* FOOTER */
+  footer {
+    background: var(--earth);
+    color: var(--cream);
+    padding: 3rem 2.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .footer-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    font-weight: 900;
+  }
+
+  .footer-logo span { color: var(--rust); }
+
+  footer p {
+    font-size: 0.8rem;
+    opacity: 0.4;
+  }
+
+  .footer-links {
+    display: flex;
+    gap: 1.5rem;
+  }
+
+  .footer-links a {
+    color: var(--cream);
+    text-decoration: none;
+    font-size: 0.8rem;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+  }
+
+  .footer-links a:hover { opacity: 1; }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* MOBILE */
+  @media (max-width: 768px) {
+    .hero { grid-template-columns: 1fr; }
+    .hero-right { min-height: 400px; }
+    nav ul { display: none; }
+    .stats-bar { gap: 2rem; }
+    footer { flex-direction: column; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Julesk<span>Local</span></div>
+  <ul>
+    <li><a href="#">Services</a></li>
+    <li><a href="#">For Providers</a></li>
+    <li><a href="#">Share a Plate</a></li>
+    <li><a href="#">Find a Song</a></li>
+    <li><a href="#" class="nav-cta">Join Beta</a></li>
+  </ul>
+</nav>
+
+<section class="hero">
+  <div class="hero-left">
+    <p class="hero-eyebrow">Community · Local · Real</p>
+    <h1 class="hero-title">Your neighborhood,<br><em>connected.</em></h1>
+    <p class="hero-sub">Find local businesses, telehealth providers, home-cooked meals, and music — all with transparent pricing and zero service fees. Just community helping community.</p>
+    <div class="hero-actions">
+      <a href="#" class="btn-primary">Explore Services</a>
+      <a href="#" class="btn-secondary">List Your Business</a>
+    </div>
+  </div>
+  <div class="hero-right">
+    <div class="service-float">
+      <div class="service-card">
+        <span class="service-icon">🏥</span>
+        <h3>Telehealth</h3>
+        <p>Verified providers, prices upfront</p>
+        <span class="service-tag">Live</span>
+      </div>
+      <div class="service-card">
+        <span class="service-icon">🍽️</span>
+        <h3>Share a Plate</h3>
+        <p>Home cooks near you</p>
+        <span class="service-tag">Beta</span>
+      </div>
+      <div class="service-card">
+        <span class="service-icon">🎵</span>
+        <h3>Find a Song</h3>
+        <p>Describe it, find it, own it</p>
+        <span class="service-tag">Coming Soon</span>
+      </div>
+      <div class="service-card">
+        <span class="service-icon">🏪</span>
+        <h3>Local Biz</h3>
+        <p>Real businesses, real reviews</p>
+        <span class="service-tag">Live</span>
+      </div>
+      <div class="service-card wide">
+        <span class="service-icon">🔍</span>
+        <h3>Find a Doctor by Insurance</h3>
+        <p>Search local doctors filtered by your insurance plan — no more portal nightmares</p>
+        <span class="service-tag">Health App</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="stats-bar">
+  <div class="stat">
+    <span class="stat-num">$0</span>
+    <span class="stat-label">Service Fees</span>
+  </div>
+  <div class="stat">
+    <span class="stat-num">100%</span>
+    <span class="stat-label">Price Transparency</span>
+  </div>
+  <div class="stat">
+    <span class="stat-num">50</span>
+    <span class="stat-label">Beta Spots Open</span>
+  </div>
+  <div class="stat">
+    <span class="stat-num">Free</span>
+    <span class="stat-label">2-Month Trial</span>
+  </div>
+</div>
+
+<section class="services">
+  <div class="section-header">
+    <span class="section-eyebrow">What We Offer</span>
+    <h2 class="section-title">Everything your community needs,<br>in one honest place.</h2>
+  </div>
+  <div class="services-grid">
+    <div class="svc">
+      <span class="svc-icon">🏪</span>
+      <h3>Local Businesses</h3>
+      <p>Find vetted local services with real pricing. No hidden fees, no bait-and-switch. Schedule directly through their link.</p>
+      <p class="svc-price">Free to search · $20/mo to list</p>
+    </div>
+    <div class="svc">
+      <span class="svc-icon">🏥</span>
+      <h3>Telehealth</h3>
+      <p>Licensed providers with fees shown upfront. Filter by specialty, insurance, and availability.</p>
+      <p class="svc-price">Free to search · Provider subscription</p>
+    </div>
+    <div class="svc">
+      <span class="svc-icon">🍽️</span>
+      <h3>Share a Plate</h3>
+      <p>Home cooks near you making an extra plate. Why not? Feed your neighbor, make a little extra.</p>
+      <p class="svc-price">Free to browse · Cook subscription</p>
+    </div>
+    <div class="svc">
+      <span class="svc-icon">🎵</span>
+      <h3>Find a Song</h3>
+      <p>Can't remember the name? Hum it, describe it, find it. Purchase directly from the artist.</p>
+      <p class="svc-price">Subscription access</p>
+    </div>
+    <div class="svc">
+      <span class="svc-icon">🛍️</span>
+      <h3>Community Market</h3>
+      <p>Sell handmade goods and wellness products. No medical claims allowed — just honest goods.</p>
+      <p class="svc-price">Free to browse · Seller subscription</p>
+    </div>
+    <div class="svc">
+      <span class="svc-icon">📋</span>
+      <h3>Resource Lists</h3>
+      <p>Insurance guides, community resources, and service lists — copyable and always up to date.</p>
+      <p class="svc-price">Always free</p>
+    </div>
+  </div>
+</section>
+
+<section class="how">
+  <div class="how-inner">
+    <div class="section-header">
+      <span class="section-eyebrow" style="color:var(--gold)">How It Works</span>
+      <h2 class="section-title">Built by the community.<br>Run for the community.</h2>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <h3>List for Free</h3>
+        <p>Sign up, set up your listing in minutes. 2-month free beta trial. No credit card required to start.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <h3>Set Your Prices</h3>
+        <p>Your pricing lives on your website. We pull it and display it. You change it, we update it. Full transparency.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <h3>Get Found</h3>
+        <p>Searchable by location, service type, insurance, and availability. Real people finding real services.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <h3>Community Grows</h3>
+        <p>You shape the platform. Beta users build alongside us. Feedback becomes features.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="beta">
+  <div class="beta-box">
+    <h2>Join the Beta</h2>
+    <p>Be one of 50 founding businesses who help build JuleskLocal from the ground up. Free during beta. Your feedback shapes every feature.</p>
+    <div class="beta-form">
+      <input type="text" placeholder="Business name">
+      <input type="email" placeholder="Your email">
+      <button>Get Early Access</button>
+    </div>
+    <div class="beta-perks">
+      <span class="perk">Free during beta</span>
+      <span class="perk">Direct input on features</span>
+      <span class="perk">Founding member status</span>
+      <span class="perk">No service fees ever</span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">Julesk<span>Local</span></div>
+  <p>© 2026 JuleskLocal. Community first, always.</p>
+  <div class="footer-links">
+    <a href="#">Privacy</a>
+    <a href="#">Terms</a>
+    <a href="#">Contact</a>
+  </div>
+</footer>
+
+</body>
+</html>

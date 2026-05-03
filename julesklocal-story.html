@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Why JuleskLocal Exists</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Karla:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1A1410;
+    --paper: #F7F3EC;
+    --rust: #B85C38;
+    --warm: #E8DFD0;
+    --faded: #9A8E7E;
+    --sage: #4A6741;
+    --gold: #C9973A;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Karla', sans-serif;
+    font-weight: 300;
+    line-height: 1.8;
+    overflow-x: hidden;
+  }
+
+  /* NOISE OVERLAY */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  /* OPENING — full bleed dark */
+  .opening {
+    min-height: 100vh;
+    background: var(--ink);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 6rem 8vw;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .opening::before {
+    content: '';
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    background: var(--rust);
+    border-radius: 50%;
+    opacity: 0.06;
+    top: -200px;
+    right: -200px;
+  }
+
+  .opening-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--rust);
+    margin-bottom: 2.5rem;
+    opacity: 0;
+    animation: rise 0.8s ease 0.2s forwards;
+  }
+
+  .opening h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(3rem, 8vw, 7rem);
+    font-weight: 700;
+    color: var(--paper);
+    line-height: 1.0;
+    letter-spacing: -0.02em;
+    max-width: 800px;
+    opacity: 0;
+    animation: rise 0.9s ease 0.4s forwards;
+  }
+
+  .opening h1 em {
+    font-style: italic;
+    color: var(--rust);
+  }
+
+  .opening-sub {
+    margin-top: 2.5rem;
+    font-size: 1.1rem;
+    color: rgba(247,243,236,0.5);
+    max-width: 480px;
+    line-height: 1.7;
+    opacity: 0;
+    animation: rise 0.9s ease 0.6s forwards;
+  }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 3rem;
+    left: 8vw;
+    font-size: 0.72rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(247,243,236,0.25);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    opacity: 0;
+    animation: rise 1s ease 1.2s forwards;
+  }
+
+  .scroll-hint::after {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 1px;
+    background: rgba(247,243,236,0.2);
+  }
+
+  /* STORY SECTIONS */
+  .story {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 8rem 2rem;
+  }
+
+  .chapter {
+    margin-bottom: 6rem;
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+
+  .chapter.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .chapter-num {
+    font-size: 0.68rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--rust);
+    margin-bottom: 1.5rem;
+    display: block;
+  }
+
+  .chapter h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    margin-bottom: 1.5rem;
+  }
+
+  .chapter h2 em { font-style: italic; color: var(--rust); }
+
+  .chapter p {
+    font-size: 1rem;
+    color: #3A3026;
+    margin-bottom: 1.2rem;
+    line-height: 1.9;
+  }
+
+  .chapter p strong {
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  /* PULL QUOTE */
+  .pull-quote {
+    border-left: 3px solid var(--rust);
+    padding: 1.5rem 2rem;
+    margin: 3rem 0;
+    background: var(--warm);
+    border-radius: 0 0.5rem 0.5rem 0;
+  }
+
+  .pull-quote p {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem;
+    font-style: italic;
+    font-weight: 400;
+    color: var(--ink);
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  /* DIVIDER */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin: 4rem 0;
+    opacity: 0.3;
+  }
+
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--ink);
+  }
+
+  .divider span { font-size: 1rem; }
+
+  /* WHAT WE BUILT */
+  .built {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 8rem 8vw;
+  }
+
+  .built-inner {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .built h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 4rem;
+    letter-spacing: -0.02em;
+  }
+
+  .built h2 em { font-style: italic; color: var(--rust); }
+
+  .promises {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+
+  .promise {
+    padding: 2.5rem;
+    border-top: 1px solid rgba(247,243,236,0.08);
+    border-left: 1px solid rgba(247,243,236,0.08);
+    transition: background 0.3s;
+  }
+
+  .promise:hover { background: rgba(247,243,236,0.03); }
+
+  .promise-icon {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    display: block;
+  }
+
+  .promise h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 0.6rem;
+    color: var(--paper);
+  }
+
+  .promise p {
+    font-size: 0.88rem;
+    color: rgba(247,243,236,0.45);
+    line-height: 1.7;
+  }
+
+  /* FOR WHO */
+  .forwho {
+    padding: 8rem 8vw;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .forwho h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 700;
+    margin-bottom: 3rem;
+    line-height: 1.15;
+  }
+
+  .forwho h2 em { font-style: italic; color: var(--rust); }
+
+  .who-list {
+    list-style: none;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+
+  .who-list li {
+    padding: 1.5rem;
+    background: var(--warm);
+    border-radius: 0.75rem;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #3A3026;
+    position: relative;
+    padding-left: 3rem;
+  }
+
+  .who-list li::before {
+    content: '→';
+    position: absolute;
+    left: 1.2rem;
+    color: var(--rust);
+    font-weight: 700;
+  }
+
+  /* CTA */
+  .cta-section {
+    background: var(--rust);
+    color: var(--paper);
+    padding: 8rem 8vw;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta-section::before {
+    content: '';
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    background: rgba(0,0,0,0.1);
+    border-radius: 50%;
+    top: -200px;
+    left: -150px;
+  }
+
+  .cta-section h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .cta-section p {
+    font-size: 1rem;
+    opacity: 0.8;
+    max-width: 500px;
+    margin: 0 auto 2.5rem;
+    line-height: 1.7;
+    position: relative;
+    z-index: 1;
+  }
+
+  .cta-btns {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 1;
+  }
+
+  .cta-btn-white {
+    background: var(--paper);
+    color: var(--rust);
+    padding: 1rem 2.5rem;
+    border-radius: 3rem;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: opacity 0.2s;
+  }
+
+  .cta-btn-white:hover { opacity: 0.9; }
+
+  .cta-btn-outline {
+    background: transparent;
+    color: var(--paper);
+    padding: 1rem 2.5rem;
+    border-radius: 3rem;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    border: 1.5px solid rgba(247,243,236,0.5);
+    transition: border-color 0.2s;
+  }
+
+  .cta-btn-outline:hover { border-color: var(--paper); }
+
+  /* FOOTER */
+  footer {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 2.5rem 8vw;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .footer-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+  }
+
+  .footer-logo span { color: var(--rust); font-style: italic; }
+
+  footer p { font-size: 0.78rem; opacity: 0.3; }
+
+  /* ANIMATIONS */
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* MOBILE */
+  @media (max-width: 680px) {
+    .promises { grid-template-columns: 1fr; }
+    .who-list { grid-template-columns: 1fr; }
+    .opening { padding: 5rem 6vw; }
+  }
+</style>
+</head>
+<body>
+
+<!-- OPENING -->
+<section class="opening">
+  <p class="opening-label">The Story Behind JuleskLocal</p>
+  <h1>I didn't have<br><em>community.</em><br>So I built it.</h1>
+  <p class="opening-sub">Not as a product. Not as a startup pitch. As something that actually works — for me first, then for everyone else who also doesn't have it.</p>
+  <div class="scroll-hint">Read the story</div>
+</section>
+
+<!-- STORY -->
+<section class="story">
+
+  <div class="chapter">
+    <span class="chapter-num">Chapter 01</span>
+    <h2>The problem wasn't a <em>lack of services.</em><br>It was a lack of access.</h2>
+    <p>The services exist. The doctors are out there. The local businesses are open. The home cooks are cooking. The musicians are making music.</p>
+    <p>But finding them? That's where everything falls apart.</p>
+    <p>Hospital portals that don't answer questions. Insurance searches that return nothing useful. Google results full of paid placements. Yelp charging small businesses a fortune just to be found. Meta running the only "community" anyone can afford.</p>
+    <p><strong>The system isn't broken. It's designed — just not for us.</strong></p>
+  </div>
+
+  <div class="divider"><span>✦</span></div>
+
+  <div class="chapter">
+    <span class="chapter-num">Chapter 02</span>
+    <h2>I needed to find a doctor.<br><em>It was the worst.</em></h2>
+    <p>Not because doctors don't exist. Because navigating insurance portals to find one that's local, available, and actually covered felt like a second job.</p>
+    <p>Copy-pasting resource lists. Calling numbers that go to voicemail. Clicking through portals built in 2008 that aren't question-friendly.</p>
+
+    <div class="pull-quote">
+      <p>"The good services are hard to find. The searches are the worst. There's no worse than the worst."</p>
+    </div>
+
+    <p>That frustration didn't go away. It turned into a question: <strong>what if this was just... easy?</strong></p>
+  </div>
+
+  <div class="divider"><span>✦</span></div>
+
+  <div class="chapter">
+    <span class="chapter-num">Chapter 03</span>
+    <h2>What if your neighbor<br>could feed you <em>tonight?</em></h2>
+    <p>Community isn't an app feature. It's people. A home cook making an extra plate. A musician whose song you heard once and can't stop thinking about. A local business that actually picks up the phone.</p>
+    <p>These things already exist. They just don't have a place to be found — without someone taking 30% off the top, without fake reviews, without a paywall just to be visible.</p>
+    <p><strong>JuleskLocal is that place.</strong></p>
+  </div>
+
+</section>
+
+<!-- WHAT WE BUILT -->
+<section class="built">
+  <div class="built-inner">
+    <h2>We built it on<br><em>four promises.</em></h2>
+    <div class="promises">
+      <div class="promise">
+        <span class="promise-icon">$0</span>
+        <h3>No Service Fees</h3>
+        <p>We connect people. We don't take a cut of what happens between them. Ever.</p>
+      </div>
+      <div class="promise">
+        <span class="promise-icon">👁</span>
+        <h3>Full Price Transparency</h3>
+        <p>Every provider shows their prices upfront. You know what you're paying before you book.</p>
+      </div>
+      <div class="promise">
+        <span class="promise-icon">✓</span>
+        <h3>No Pseudoscience</h3>
+        <p>Health information on this platform is science-backed. Sell trinkets — just don't call them medicine.</p>
+      </div>
+      <div class="promise">
+        <span class="promise-icon">🤝</span>
+        <h3>Community-Built</h3>
+        <p>Beta users build alongside us. Feedback becomes features. The platform belongs to the people using it.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOR WHO -->
+<section class="forwho">
+  <h2>This was built for<br><em>people like us.</em></h2>
+  <ul class="who-list">
+    <li>The person trying to find a doctor covered by their insurance without calling 12 offices</li>
+    <li>The home cook with an extra plate and no way to reach the neighbor who needs it</li>
+    <li>The small business owner paying Yelp $300/mo just to exist online</li>
+    <li>The telehealth provider whose fees are buried in fine print on every other platform</li>
+    <li>The person who heard a song once and can't find it anywhere</li>
+    <li>Anyone who needed community and didn't know where to find it</li>
+  </ul>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <h2>Build it with us.</h2>
+  <p>50 founding businesses. Free during beta. Your feedback shapes every feature. No service fees. No hidden costs. Just community.</p>
+  <div class="cta-btns">
+    <a href="#" class="cta-btn-white">Join the Beta</a>
+    <a href="#" class="cta-btn-outline">List Your Business</a>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">Julesk<span>Local</span></div>
+  <p>Community first, always.</p>
+  <p>© 2026 JuleskLocal</p>
+</footer>
+
+<script>
+  // Scroll reveal
+  const chapters = document.querySelectorAll('.chapter');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) e.target.classList.add('visible');
+    });
+  }, { threshold: 0.15 });
+  chapters.forEach(c => observer.observe(c));
+</script>
+
+</body>
+</html>
