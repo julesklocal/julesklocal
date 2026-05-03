@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JuleskLocal — List Your Business</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Karla:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --ink: #1A1410; --paper: #F7F3EC; --rust: #B85C38;
+    --warm: #E8DFD0; --sage: #4A6741; --gold: #C9973A;
+    --muted: #9A8E7E; --error: #C0392B; --border: rgba(44,36,22,0.12);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--paper); color: var(--ink); font-family: 'Karla', sans-serif; font-weight: 300; min-height: 100vh; }
+
+  nav { padding: 1.25rem 2.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); background: var(--paper); position: sticky; top: 0; z-index: 100; }
+  .logo { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 700; color: var(--ink); text-decoration: none; }
+  .logo span { color: var(--rust); font-style: italic; }
+  .nav-back { font-size: 0.8rem; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+  .nav-back:hover { color: var(--ink); }
+
+  /* STEPS */
+  .steps-bar { background: var(--warm); border-bottom: 1px solid var(--border); padding: 1rem 2.5rem; display: flex; align-items: center; gap: 0; }
+  .step-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--muted); letter-spacing: 0.05em; }
+  .step-item.active { color: var(--rust); font-weight: 500; }
+  .step-item.done { color: var(--sage); }
+  .step-num { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid currentColor; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 600; flex-shrink: 0; }
+  .step-item.done .step-num { background: var(--sage); border-color: var(--sage); color: white; }
+  .step-item.done .step-num::before { content: '✓'; }
+  .step-arrow { color: var(--muted); font-size: 0.7rem; margin: 0 0.75rem; opacity: 0.4; }
+
+  main { max-width: 700px; margin: 0 auto; padding: 3rem 2rem 6rem; }
+
+  .page { display: none; animation: fadeUp 0.4s ease; }
+  .page.active { display: block; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+  .page-eyebrow { font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--rust); margin-bottom: 0.75rem; }
+  .page-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 700; line-height: 1.1; margin-bottom: 0.75rem; }
+  .page-title em { font-style: italic; color: var(--rust); }
+  .page-sub { font-size: 0.92rem; color: var(--muted); line-height: 1.7; margin-bottom: 2.5rem; }
+
+  .field { margin-bottom: 1.5rem; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+  label { display: block; font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; font-weight: 500; }
+  .label-opt { opacity: 0.5; font-size: 0.65rem; margin-left: 0.3rem; }
+
+  input, select, textarea {
+    width: 100%; background: white; border: 1.5px solid var(--border);
+    border-radius: 0.5rem; padding: 0.85rem 1rem; color: var(--ink);
+    font-family: 'Karla', sans-serif; font-size: 0.92rem; font-weight: 300;
+    outline: none; transition: border-color 0.2s; appearance: none;
+  }
+  input::placeholder, textarea::placeholder { color: var(--muted); opacity: 0.6; }
+  input:focus, select:focus, textarea:focus { border-color: var(--rust); }
+  select option { color: var(--ink); }
+  textarea { resize: none; height: 100px; line-height: 1.6; }
+
+  .field-error { font-size: 0.7rem; color: var(--error); margin-top: 0.3rem; display: none; }
+  .field.has-error input, .field.has-error select, .field.has-error textarea { border-color: var(--error); }
+  .field.has-error .field-error { display: block; }
+
+  .social-group { background: var(--warm); border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 1.5rem; }
+  .social-group-title { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 1rem; font-weight: 500; }
+  .social-field { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
+  .social-field:last-child { margin-bottom: 0; }
+  .social-icon { font-size: 1.1rem; width: 28px; flex-shrink: 0; text-align: center; }
+  .social-field input { margin: 0; }
+
+  .btn-primary { background: var(--rust); color: white; border: none; padding: 1rem 2.5rem; border-radius: 2rem; font-family: 'Karla', sans-serif; font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: opacity 0.2s, transform 0.2s; position: relative; overflow: hidden; }
+  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .btn-secondary { background: transparent; color: var(--ink); border: 1.5px solid var(--border); padding: 1rem 2rem; border-radius: 2rem; font-family: 'Karla', sans-serif; font-size: 0.95rem; font-weight: 400; cursor: pointer; transition: all 0.2s; margin-right: 0.75rem; }
+  .btn-secondary:hover { border-color: var(--ink); }
+
+  .btn-row { display: flex; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-top: 2rem; }
+
+  .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; vertical-align: middle; margin-right: 0.5rem; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .divider { height: 1px; background: var(--border); margin: 2rem 0; }
+
+  /* CATEGORY GRID */
+  .category-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem; }
+  .cat-card { border: 1.5px solid var(--border); border-radius: 0.75rem; padding: 1rem; cursor: pointer; transition: all 0.2s; background: white; text-align: center; }
+  .cat-card:hover { border-color: var(--rust); }
+  .cat-card.selected { border-color: var(--rust); background: rgba(184,92,56,0.06); }
+  .cat-icon { font-size: 1.5rem; margin-bottom: 0.4rem; display: block; }
+  .cat-name { font-size: 0.8rem; font-weight: 500; color: var(--ink); }
+
+  /* SUCCESS */
+  .success-wrap { text-align: center; padding: 3rem 0; }
+  .success-circle { width: 80px; height: 80px; background: rgba(74,103,65,0.1); border: 2px solid var(--sage); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; font-size: 2rem; animation: popIn 0.5s cubic-bezier(0.175,0.885,0.32,1.275); }
+  @keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .profile-url-box { background: var(--warm); border: 1.5px solid var(--border); border-radius: 0.75rem; padding: 1.25rem; margin: 1.5rem 0; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .profile-url { font-size: 0.88rem; color: var(--rust); word-break: break-all; }
+  .copy-btn { background: var(--ink); color: white; border: none; padding: 0.5rem 1rem; border-radius: 1rem; font-family: 'Karla', sans-serif; font-size: 0.75rem; cursor: pointer; white-space: nowrap; transition: opacity 0.2s; }
+  .copy-btn:hover { opacity: 0.8; }
+
+  .ai-suggestions { background: white; border: 1.5px solid var(--border); border-radius: 0.75rem; padding: 1.5rem; margin-top: 1.5rem; text-align: left; }
+  .ai-suggestions-label { font-size: 0.68rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--rust); margin-bottom: 0.75rem; font-weight: 500; }
+  .ai-suggestions-text { font-size: 0.88rem; color: var(--muted); line-height: 1.7; min-height: 60px; }
+  .ai-suggestions-text.loading { display: flex; align-items: center; gap: 0.5rem; font-style: italic; }
+
+  .db-error { background: rgba(192,57,43,0.08); border: 1px solid rgba(192,57,43,0.2); border-radius: 0.5rem; padding: 0.75rem 1rem; font-size: 0.82rem; color: var(--error); margin-top: 1rem; display: none; }
+
+  @media (max-width: 600px) {
+    .field-row { grid-template-columns: 1fr; }
+    main { padding: 2rem 1.25rem 4rem; }
+    .steps-bar { padding: 0.75rem 1.25rem; gap: 0; }
+    .step-arrow { margin: 0 0.4rem; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="logo">Julesk<span>Local</span></a>
+  <a href="index.html" class="nav-back">← Back to home</a>
+</nav>
+
+<div class="steps-bar">
+  <div class="step-item active" id="step1-ind"><div class="step-num">1</div> <span>Your Info</span></div>
+  <span class="step-arrow">→</span>
+  <div class="step-item" id="step2-ind"><div class="step-num">2</div> <span>Category</span></div>
+  <span class="step-arrow">→</span>
+  <div class="step-item" id="step3-ind"><div class="step-num">3</div> <span>Links & Hours</span></div>
+  <span class="step-arrow">→</span>
+  <div class="step-item" id="step4-ind"><div class="step-num">4</div> <span>Social</span></div>
+  <span class="step-arrow">→</span>
+  <div class="step-item" id="step5-ind"><div class="step-num">5</div> <span>Done</span></div>
+</div>
+
+<main>
+
+  <!-- STEP 1 — Basic Info -->
+  <div class="page active" id="page1">
+    <p class="page-eyebrow">Step 1 of 4</p>
+    <h1 class="page-title">Tell us about<br>your <em>business.</em></h1>
+    <p class="page-sub">This is what people see when they find you on JuleskLocal. Keep it honest and clear.</p>
+
+    <div class="field" id="f-business_name">
+      <label>Business Name</label>
+      <input type="text" id="business_name" placeholder="Your business name">
+      <div class="field-error">Required</div>
+    </div>
+
+    <div class="field-row">
+      <div class="field" id="f-city">
+        <label>City</label>
+        <input type="text" id="city" placeholder="Your city">
+        <div class="field-error">Required</div>
+      </div>
+      <div class="field" id="f-state">
+        <label>State <span class="label-opt">optional</span></label>
+        <input type="text" id="state" placeholder="FL">
+      </div>
+    </div>
+
+    <div class="field" id="f-description">
+      <label>Description <span class="label-opt">optional</span></label>
+      <textarea id="description" placeholder="What do you do? Who do you serve? What makes you different?"></textarea>
+    </div>
+
+    <div class="field" id="f-hours">
+      <label>Hours <span class="label-opt">optional</span></label>
+      <input type="text" id="hours" placeholder="e.g. Mon–Fri 9am–5pm, Sat by appt">
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-primary" onclick="goStep2()">Continue →</button>
+    </div>
+  </div>
+
+  <!-- STEP 2 — Category -->
+  <div class="page" id="page2">
+    <p class="page-eyebrow">Step 2 of 4</p>
+    <h1 class="page-title">What kind of<br><em>business</em> are you?</h1>
+    <p class="page-sub">Choose the category that best fits. This determines how people find you in search.</p>
+
+    <div class="category-grid" id="categoryGrid">
+      <div class="cat-card" onclick="selectCat(this,'Local Business')"><span class="cat-icon">🏪</span><div class="cat-name">Local Business</div></div>
+      <div class="cat-card" onclick="selectCat(this,'Telehealth Provider')"><span class="cat-icon">🏥</span><div class="cat-name">Telehealth</div></div>
+      <div class="cat-card" onclick="selectCat(this,'Home Cook')"><span class="cat-icon">🍽️</span><div class="cat-name">Share a Plate</div></div>
+      <div class="cat-card" onclick="selectCat(this,'Musician')"><span class="cat-icon">🎵</span><div class="cat-name">Musician</div></div>
+      <div class="cat-card" onclick="selectCat(this,'Wellness & Market')"><span class="cat-icon">🌿</span><div class="cat-name">Wellness & Market</div></div>
+      <div class="cat-card" onclick="selectCat(this,'Beauty & Salon')"><span class="cat-icon">💅</span><div class="cat-name">Beauty & Salon</div></div>
+      <div class="cat-card" onclick="selectCat(this,'Fitness & Training')"><span class="cat-icon">💪</span><div class="cat-name">Fitness & Training</div></div>
+      <div class="cat-card" onclick="selectCat(this,'Home Services')"><span class="cat-icon">🔧</span><div class="cat-name">Home Services</div></div>
+      <div class="cat-card" onclick="selectCat(this,'Food & Catering')"><span class="cat-icon">🍴</span><div class="cat-name">Food & Catering</div></div>
+      <div class="cat-card" onclick="selectCat(this,'Pet Services')"><span class="cat-icon">🐾</span><div class="cat-name">Pet Services</div></div>
+      <div class="cat-card" onclick="selectCat(this,'Childcare & Education')"><span class="cat-icon">📚</span><div class="cat-name">Childcare & Education</div></div>
+      <div class="cat-card" onclick="selectCat(this,'Other')"><span class="cat-icon">✦</span><div class="cat-name">Other</div></div>
+    </div>
+
+    <div class="field" id="f-insurance" style="display:none;">
+      <label>Insurance Accepted <span class="label-opt">optional</span></label>
+      <input type="text" id="insurance_accepted" placeholder="e.g. BlueCross, Medicaid, Aetna, Self-pay">
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="goPage(1)">← Back</button>
+      <button class="btn-primary" onclick="goStep3()">Continue →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3 — Links -->
+  <div class="page" id="page3">
+    <p class="page-eyebrow">Step 3 of 4</p>
+    <h1 class="page-title">How do people<br><em>reach</em> you?</h1>
+    <p class="page-sub">Add your links so customers can call, book, or check your prices directly. You control everything — we just display it.</p>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Phone <span class="label-opt">optional</span></label>
+        <input type="tel" id="phone" placeholder="(555) 000-0000">
+      </div>
+      <div class="field">
+        <label>Website <span class="label-opt">optional</span></label>
+        <input type="url" id="website" placeholder="https://yoursite.com">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Scheduler Link <span class="label-opt">optional</span></label>
+      <input type="url" id="scheduler_link" placeholder="Calendly, Acuity, Square, etc.">
+    </div>
+
+    <div class="field">
+      <label>Pricing Page Link <span class="label-opt">optional</span></label>
+      <input type="url" id="pricing_link" placeholder="Link to your prices — full transparency">
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="goPage(2)">← Back</button>
+      <button class="btn-primary" onclick="goStep4()">Continue →</button>
+    </div>
+  </div>
+
+  <!-- STEP 4 — Social -->
+  <div class="page" id="page4">
+    <p class="page-eyebrow">Step 4 of 4</p>
+    <h1 class="page-title">Connect your<br><em>social</em> presence.</h1>
+    <p class="page-sub">All optional. Add whatever you have — people can follow you directly from your profile.</p>
+
+    <div class="social-group">
+      <div class="social-group-title">Social Media</div>
+      <div class="social-field"><span class="social-icon">📸</span><input type="url" id="instagram" placeholder="Instagram URL"></div>
+      <div class="social-field"><span class="social-icon">👍</span><input type="url" id="facebook" placeholder="Facebook URL"></div>
+      <div class="social-field"><span class="social-icon">🎵</span><input type="url" id="tiktok" placeholder="TikTok URL"></div>
+      <div class="social-field"><span class="social-icon">▶️</span><input type="url" id="youtube" placeholder="YouTube URL"></div>
+    </div>
+
+    <div class="db-error" id="dbError">Something went wrong. Please try again.</div>
+
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="goPage(3)">← Back</button>
+      <button class="btn-primary" id="submitBtn" onclick="submitListing()">
+        <span id="btnText">Create My Listing →</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="page" id="page5">
+    <div class="success-wrap">
+      <div class="success-circle">✓</div>
+      <h1 class="page-title" style="text-align:center;">You're listed,<br><em id="bizNameDisplay"></em>.</h1>
+      <p class="page-sub" style="text-align:center;">Your business is now searchable on JuleskLocal. Share your profile link with customers.</p>
+
+      <div class="profile-url-box">
+        <span class="profile-url" id="profileUrlDisplay"></span>
+        <button class="copy-btn" onclick="copyUrl()">Copy Link</button>
+      </div>
+
+      <div class="ai-suggestions">
+        <div class="ai-suggestions-label">Claude's suggestions for your listing</div>
+        <div class="ai-suggestions-text loading" id="aiSuggestions">
+          <div class="spinner" style="border-color:rgba(0,0,0,0.1);border-top-color:var(--rust);"></div>
+          <span>Analyzing your listing...</span>
+        </div>
+      </div>
+
+      <div class="btn-row" style="justify-content:center; margin-top:2rem;">
+        <a href="search.html" class="btn-primary" style="text-decoration:none;">Search the Directory →</a>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  const SUPABASE_URL = 'https://kmugbwcwonygkzkiblqf.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImttdWdid2N3b255Z2t6a2libHFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4MDUyNDQsImV4cCI6MjA5MzM4MTI0NH0.JypfbLZ1HkLHMlAvAzzo98yi3WOdnatZPCmxMDG6dNk';
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  let selectedCategory = '';
+  let currentPage = 1;
+
+  function selectCat(el, cat) {
+    document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedCategory = cat;
+    // Show insurance field for telehealth
+    document.getElementById('f-insurance').style.display = 
+      cat === 'Telehealth Provider' ? 'block' : 'none';
+  }
+
+  function goPage(n) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page' + n).classList.add('active');
+    currentPage = n;
+    updateSteps(n);
+    window.scrollTo(0, 0);
+  }
+
+  function updateSteps(n) {
+    for (let i = 1; i <= 5; i++) {
+      const el = document.getElementById('step' + i + '-ind');
+      el.classList.remove('active', 'done');
+      if (i < n) el.classList.add('done');
+      else if (i === n) el.classList.add('active');
+    }
+  }
+
+  function req(id) {
+    const val = document.getElementById(id).value.trim();
+    const field = document.getElementById('f-' + id);
+    if (!val) { if (field) field.classList.add('has-error'); return false; }
+    if (field) field.classList.remove('has-error');
+    return true;
+  }
+
+  function goStep2() {
+    const ok = req('business_name') & req('city');
+    if (ok) goPage(2);
+  }
+
+  function goStep3() {
+    if (!selectedCategory) {
+      alert('Please select a category.');
+      return;
+    }
+    goPage(3);
+  }
+
+  function goStep4() { goPage(4); }
+
+  function slugify(text) {
+    return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  }
+
+  async function submitListing() {
+    const btn = document.getElementById('submitBtn');
+    const errEl = document.getElementById('dbError');
+    btn.disabled = true;
+    document.getElementById('btnText').innerHTML = '<span class="spinner"></span> Creating...';
+    errEl.style.display = 'none';
+
+    const bizName = document.getElementById('business_name').value.trim();
+    const baseSlug = slugify(bizName);
+    const slug = baseSlug + '-' + Math.random().toString(36).substr(2, 5);
+
+    const record = {
+      business_name: bizName,
+      category: selectedCategory,
+      description: document.getElementById('description').value.trim() || null,
+      city: document.getElementById('city').value.trim(),
+      state: document.getElementById('state').value.trim() || null,
+      hours: document.getElementById('hours').value.trim() || null,
+      phone: document.getElementById('phone').value.trim() || null,
+      website: document.getElementById('website').value.trim() || null,
+      scheduler_link: document.getElementById('scheduler_link').value.trim() || null,
+      pricing_link: document.getElementById('pricing_link').value.trim() || null,
+      insurance_accepted: document.getElementById('insurance_accepted').value.trim() || null,
+      instagram: document.getElementById('instagram').value.trim() || null,
+      facebook: document.getElementById('facebook').value.trim() || null,
+      tiktok: document.getElementById('tiktok').value.trim() || null,
+      youtube: document.getElementById('youtube').value.trim() || null,
+      slug
+    };
+
+    const { error } = await db.from('businesses').insert([record]);
+
+    if (error) {
+      btn.disabled = false;
+      document.getElementById('btnText').textContent = 'Create My Listing →';
+      errEl.style.display = 'block';
+      console.error(error);
+      return;
+    }
+
+    // Success
+    const profileUrl = `julesk.online/biz/${slug}`;
+    document.getElementById('bizNameDisplay').textContent = bizName;
+    document.getElementById('profileUrlDisplay').textContent = profileUrl;
+    goPage(5);
+    generateSuggestions(record);
+  }
+
+  function copyUrl() {
+    const url = document.getElementById('profileUrlDisplay').textContent;
+    navigator.clipboard.writeText('https://' + url);
+    document.querySelector('.copy-btn').textContent = 'Copied!';
+    setTimeout(() => document.querySelector('.copy-btn').textContent = 'Copy Link', 2000);
+  }
+
+  async function generateSuggestions(record) {
+    const el = document.getElementById('aiSuggestions');
+    try {
+      const missing = [];
+      if (!record.description) missing.push('description');
+      if (!record.phone) missing.push('phone number');
+      if (!record.website) missing.push('website');
+      if (!record.pricing_link) missing.push('pricing page link');
+      if (!record.scheduler_link) missing.push('scheduler link');
+      if (!record.instagram && !record.facebook && !record.tiktok) missing.push('social media');
+
+      const prompt = `You are the JuleskLocal platform AI. A business just created their listing. Analyze it and give 3 short, specific, actionable suggestions to improve their visibility and get more customers. Be direct and practical. No fluff.
+
+Business: ${record.business_name}
+Category: ${record.category}
+City: ${record.city}
+Description: ${record.description || 'not provided'}
+Missing fields: ${missing.length ? missing.join(', ') : 'none — great job!'}
+Has phone: ${!!record.phone}
+Has website: ${!!record.website}
+Has pricing link: ${!!record.pricing_link}
+Has scheduler: ${!!record.scheduler_link}
+Has social: ${!!(record.instagram || record.facebook || record.tiktok || record.youtube)}
+
+Give exactly 3 suggestions numbered 1, 2, 3. Each one sentence. Focus on what will actually get them more customers on a local directory.`;
+
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+
+      const data = await response.json();
+      const text = data.content?.find(b => b.type === 'text')?.text || '';
+      el.classList.remove('loading');
+      el.textContent = text;
+    } catch (err) {
+      el.classList.remove('loading');
+      el.textContent = 'Add your pricing link and scheduler to get 3x more customer clicks. Complete your description so people know exactly what you offer. Share your profile link on your social media to drive your first reviews.';
+    }
+  }
+</script>
+</body>
+</html>

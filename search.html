@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JuleskLocal — Search</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Karla:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root { --ink:#1A1410;--paper:#F7F3EC;--rust:#B85C38;--warm:#E8DFD0;--sage:#4A6741;--gold:#C9973A;--muted:#9A8E7E;--border:rgba(44,36,22,0.12); }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--paper);color:var(--ink);font-family:'Karla',sans-serif;font-weight:300;min-height:100vh;}
+  nav{padding:1.25rem 2.5rem;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);background:var(--paper);position:sticky;top:0;z-index:100;}
+  .logo{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:700;color:var(--ink);text-decoration:none;}
+  .logo span{color:var(--rust);font-style:italic;}
+  .nav-link{font-size:0.82rem;color:var(--muted);text-decoration:none;transition:color 0.2s;}
+  .nav-link:hover{color:var(--ink);}
+  .nav-cta{background:var(--rust);color:white;padding:0.5rem 1.25rem;border-radius:2rem;font-size:0.82rem;text-decoration:none;transition:opacity 0.2s;}
+  .nav-cta:hover{opacity:0.85;}
+  .nav-right{display:flex;align-items:center;gap:1.5rem;}
+
+  /* SEARCH HERO */
+  .search-hero{background:var(--ink);padding:3rem 2.5rem;position:relative;overflow:hidden;}
+  .search-hero::before{content:'';position:absolute;width:400px;height:400px;background:radial-gradient(circle,rgba(184,92,56,0.15) 0%,transparent 70%);border-radius:50%;top:-150px;right:-100px;pointer-events:none;}
+  .search-hero h1{font-family:'Cormorant Garamond',serif;font-size:clamp(1.8rem,4vw,3rem);font-weight:700;color:var(--paper);line-height:1.1;margin-bottom:1.5rem;}
+  .search-hero h1 em{font-style:italic;color:var(--rust);}
+
+  .search-bar{display:flex;gap:0.75rem;max-width:700px;flex-wrap:wrap;}
+  .search-input-wrap{flex:1;min-width:200px;position:relative;}
+  .search-input{width:100%;background:rgba(247,243,236,0.08);border:1.5px solid rgba(247,243,236,0.15);border-radius:0.5rem;padding:0.9rem 1rem 0.9rem 2.75rem;color:var(--paper);font-family:'Karla',sans-serif;font-size:0.95rem;outline:none;transition:border-color 0.2s;}
+  .search-input:focus{border-color:var(--rust);}
+  .search-input::placeholder{color:rgba(247,243,236,0.35);}
+  .search-icon{position:absolute;left:0.85rem;top:50%;transform:translateY(-50%);font-size:1rem;opacity:0.4;}
+  .search-city{background:rgba(247,243,236,0.08);border:1.5px solid rgba(247,243,236,0.15);border-radius:0.5rem;padding:0.9rem 1rem;color:var(--paper);font-family:'Karla',sans-serif;font-size:0.95rem;outline:none;transition:border-color 0.2s;width:160px;appearance:none;}
+  .search-city:focus{border-color:var(--rust);}
+  .search-city::placeholder{color:rgba(247,243,236,0.35);}
+  .search-btn{background:var(--rust);color:white;border:none;padding:0.9rem 2rem;border-radius:0.5rem;font-family:'Karla',sans-serif;font-size:0.95rem;font-weight:500;cursor:pointer;transition:opacity 0.2s;white-space:nowrap;}
+  .search-btn:hover{opacity:0.85;}
+
+  /* FILTERS */
+  .filters{padding:1rem 2.5rem;border-bottom:1px solid var(--border);display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;background:var(--warm);}
+  .filter-label{font-size:0.72rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-right:0.25rem;}
+  .filter-chip{border:1.5px solid var(--border);border-radius:2rem;padding:0.35rem 0.85rem;font-size:0.78rem;cursor:pointer;transition:all 0.2s;background:white;color:var(--ink);font-family:'Karla',sans-serif;}
+  .filter-chip:hover{border-color:var(--rust);}
+  .filter-chip.active{background:var(--rust);border-color:var(--rust);color:white;}
+
+  /* RESULTS */
+  .results-area{max-width:1100px;margin:0 auto;padding:2rem 2.5rem;}
+  .results-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:0.5rem;}
+  .results-count{font-size:0.82rem;color:var(--muted);}
+  .sort-select{border:1.5px solid var(--border);border-radius:0.4rem;padding:0.4rem 0.75rem;font-family:'Karla',sans-serif;font-size:0.8rem;color:var(--ink);background:white;outline:none;appearance:none;cursor:pointer;}
+
+  .results-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem;}
+
+  /* BUSINESS CARD */
+  .biz-card{background:white;border:1.5px solid var(--border);border-radius:1rem;padding:1.5rem;transition:transform 0.2s,box-shadow 0.2s,border-color 0.2s;cursor:pointer;position:relative;overflow:hidden;text-decoration:none;display:block;color:var(--ink);}
+  .biz-card:hover{transform:translateY(-3px);box-shadow:0 8px 32px rgba(44,36,22,0.1);border-color:var(--rust);}
+  .biz-card.promoted{border-color:var(--gold);}
+  .promoted-badge{position:absolute;top:1rem;right:1rem;background:var(--gold);color:white;font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.2rem 0.5rem;border-radius:0.2rem;font-weight:600;}
+  .biz-category{font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--rust);margin-bottom:0.5rem;font-weight:500;}
+  .biz-name{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:700;margin-bottom:0.3rem;line-height:1.2;}
+  .biz-city{font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem;}
+  .biz-desc{font-size:0.82rem;color:#5A4E40;line-height:1.6;margin-bottom:1rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .biz-links{display:flex;gap:0.5rem;flex-wrap:wrap;}
+  .biz-link{font-size:0.7rem;padding:0.25rem 0.6rem;border-radius:1rem;border:1px solid var(--border);color:var(--muted);transition:all 0.2s;}
+  .biz-link:hover{border-color:var(--rust);color:var(--rust);}
+  .biz-hours{font-size:0.75rem;color:var(--sage);margin-top:0.75rem;}
+
+  /* EMPTY / LOADING */
+  .results-message{text-align:center;padding:5rem 2rem;color:var(--muted);}
+  .results-message h3{font-family:'Cormorant Garamond',serif;font-size:1.5rem;margin-bottom:0.5rem;color:var(--ink);}
+  .results-message p{font-size:0.88rem;line-height:1.7;}
+  .spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--rust);border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block;margin-bottom:1rem;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* AI INTERPRETATION */
+  .ai-interp{background:rgba(184,92,56,0.06);border:1px solid rgba(184,92,56,0.15);border-radius:0.75rem;padding:1rem 1.25rem;margin-bottom:1.5rem;font-size:0.84rem;color:var(--ink);line-height:1.6;display:none;}
+  .ai-interp-label{font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--rust);margin-bottom:0.3rem;font-weight:500;}
+
+  @media(max-width:600px){
+    .results-area{padding:1.5rem 1rem;}
+    nav{padding:1rem 1.25rem;}
+    .filters{padding:0.75rem 1rem;}
+    .search-hero{padding:2rem 1.25rem;}
+    .results-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="logo">Julesk<span>Local</span></a>
+  <div class="nav-right">
+    <a href="list-your-business.html" class="nav-link">List Your Business</a>
+    <a href="julesklocal-beta-signup.html" class="nav-cta">Join Beta</a>
+  </div>
+</nav>
+
+<div class="search-hero">
+  <h1>Find local services<br>that <em>actually</em> work.</h1>
+  <div class="search-bar">
+    <div class="search-input-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" class="search-input" id="searchInput" placeholder="Search by name, service, or describe what you need..." onkeydown="if(event.key==='Enter')doSearch()">
+    </div>
+    <input type="text" class="search-city" id="cityInput" placeholder="City">
+    <button class="search-btn" onclick="doSearch()">Search</button>
+  </div>
+</div>
+
+<div class="filters">
+  <span class="filter-label">Filter:</span>
+  <button class="filter-chip active" onclick="setFilter(this,'')">All</button>
+  <button class="filter-chip" onclick="setFilter(this,'Local Business')">🏪 Local</button>
+  <button class="filter-chip" onclick="setFilter(this,'Telehealth Provider')">🏥 Telehealth</button>
+  <button class="filter-chip" onclick="setFilter(this,'Home Cook')">🍽️ Share a Plate</button>
+  <button class="filter-chip" onclick="setFilter(this,'Musician')">🎵 Music</button>
+  <button class="filter-chip" onclick="setFilter(this,'Wellness & Market')">🌿 Wellness</button>
+  <button class="filter-chip" onclick="setFilter(this,'Pet Services')">🐾 Pets</button>
+  <button class="filter-chip" onclick="setFilter(this,'Fitness & Training')">💪 Fitness</button>
+</div>
+
+<div class="results-area">
+  <div class="ai-interp" id="aiInterp">
+    <div class="ai-interp-label">Search interpretation</div>
+    <div id="aiInterpText"></div>
+  </div>
+
+  <div class="results-meta" id="resultsMeta" style="display:none;">
+    <span class="results-count" id="resultsCount"></span>
+  </div>
+
+  <div id="resultsContainer">
+    <div class="results-message">
+      <div class="spinner"></div>
+      <h3>Loading businesses...</h3>
+    </div>
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://kmugbwcwonygkzkiblqf.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImttdWdid2N3b255Z2t6a2libHFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4MDUyNDQsImV4cCI6MjA5MzM4MTI0NH0.JypfbLZ1HkLHMlAvAzzo98yi3WOdnatZPCmxMDG6dNk';
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  let activeFilter = '';
+  let allBusinesses = [];
+
+  async function loadAll() {
+    const { data, error } = await db
+      .from('businesses')
+      .select('*')
+      .eq('is_active', true)
+      .order('is_promoted', { ascending: false })
+      .order('created_at', { ascending: false });
+
+    if (error || !data) {
+      showMessage('Could not load listings. Please refresh.', '');
+      return;
+    }
+
+    allBusinesses = data;
+    renderResults(data);
+  }
+
+  function setFilter(el, cat) {
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    activeFilter = cat;
+    doSearch();
+  }
+
+  async function doSearch() {
+    const query = document.getElementById('searchInput').value.trim();
+    const city = document.getElementById('cityInput').value.trim();
+
+    let results = [...allBusinesses];
+
+    // Filter by category
+    if (activeFilter) results = results.filter(b => b.category === activeFilter);
+
+    // Filter by city
+    if (city) results = results.filter(b => b.city.toLowerCase().includes(city.toLowerCase()));
+
+    // Filter by search query
+    if (query) {
+      const q = query.toLowerCase();
+      results = results.filter(b =>
+        b.business_name.toLowerCase().includes(q) ||
+        (b.description && b.description.toLowerCase().includes(q)) ||
+        b.category.toLowerCase().includes(q) ||
+        b.city.toLowerCase().includes(q)
+      );
+
+      // If no results, try Claude smart search
+      if (results.length === 0 && allBusinesses.length > 0) {
+        await claudeSmartSearch(query, city);
+        return;
+      }
+    }
+
+    document.getElementById('aiInterp').style.display = 'none';
+    renderResults(results);
+  }
+
+  async function claudeSmartSearch(query, city) {
+    showMessage('', 'searching');
+
+    try {
+      const bizList = allBusinesses.map(b =>
+        `ID:${b.id} | ${b.business_name} | ${b.category} | ${b.city} | ${b.description || 'no description'}`
+      ).join('\n');
+
+      const prompt = `You are a local business search engine. A user searched for: "${query}"${city ? ` in ${city}` : ''}.
+
+Here are the available businesses:
+${bizList}
+
+Return ONLY a JSON array of business IDs that match the search intent, ordered by relevance. If none match, return []. Example: ["uuid1","uuid2"]
+Return only the JSON array, nothing else.`;
+
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 500,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+
+      const data = await response.json();
+      const text = data.content?.find(b => b.type === 'text')?.text || '[]';
+      const ids = JSON.parse(text.replace(/```json|```/g, '').trim());
+      const matched = allBusinesses.filter(b => ids.includes(b.id));
+
+      if (matched.length > 0) {
+        document.getElementById('aiInterp').style.display = 'block';
+        document.getElementById('aiInterpText').textContent = `Showing results for "${query}" — matched by AI search`;
+        renderResults(matched);
+      } else {
+        showMessage(`No businesses found for "${query}"`, 'empty');
+      }
+    } catch (e) {
+      showMessage(`No results found for "${query}"`, 'empty');
+    }
+  }
+
+  function renderResults(data) {
+    const container = document.getElementById('resultsContainer');
+    const meta = document.getElementById('resultsMeta');
+    const count = document.getElementById('resultsCount');
+
+    if (data.length === 0) {
+      showMessage('No businesses found. Try a different search or filter.', 'empty');
+      meta.style.display = 'none';
+      return;
+    }
+
+    meta.style.display = 'flex';
+    count.textContent = `${data.length} business${data.length !== 1 ? 'es' : ''} found`;
+
+    container.innerHTML = `<div class="results-grid">${data.map(b => cardHTML(b)).join('')}</div>`;
+  }
+
+  function cardHTML(b) {
+    const links = [];
+    if (b.phone) links.push(`<span class="biz-link">📞 Call</span>`);
+    if (b.website) links.push(`<a class="biz-link" href="${b.website}" target="_blank" onclick="trackClick(event,'${b.id}','website','${b.website}')">🌐 Website</a>`);
+    if (b.scheduler_link) links.push(`<a class="biz-link" href="${b.scheduler_link}" target="_blank" onclick="trackClick(event,'${b.id}','scheduler','${b.scheduler_link}')">📅 Book</a>`);
+    if (b.pricing_link) links.push(`<a class="biz-link" href="${b.pricing_link}" target="_blank" onclick="trackClick(event,'${b.id}','pricing','${b.pricing_link}')">💰 Pricing</a>`);
+    if (b.instagram) links.push(`<a class="biz-link" href="${b.instagram}" target="_blank">📸 Instagram</a>`);
+
+    return `
+      <a class="biz-card${b.is_promoted ? ' promoted' : ''}" href="biz.html?slug=${b.slug}" onclick="trackView('${b.id}')">
+        ${b.is_promoted ? '<span class="promoted-badge">Featured</span>' : ''}
+        <div class="biz-category">${b.category}</div>
+        <div class="biz-name">${b.business_name}</div>
+        <div class="biz-city">📍 ${b.city}${b.state ? ', ' + b.state : ''}</div>
+        ${b.description ? `<div class="biz-desc">${b.description}</div>` : ''}
+        <div class="biz-links">${links.join('')}</div>
+        ${b.hours ? `<div class="biz-hours">🕐 ${b.hours}</div>` : ''}
+      </a>`;
+  }
+
+  function showMessage(text, type) {
+    const container = document.getElementById('resultsContainer');
+    document.getElementById('resultsMeta').style.display = 'none';
+    if (type === 'searching') {
+      container.innerHTML = `<div class="results-message"><div class="spinner"></div><h3>Searching with AI...</h3><p>Finding the best match for your request.</p></div>`;
+    } else {
+      container.innerHTML = `<div class="results-message"><h3>${type === 'empty' ? 'No results found' : 'Something went wrong'}</h3><p>${text}</p></div>`;
+    }
+  }
+
+  async function trackView(bizId) {
+    await db.from('profile_views').insert([{ business_id: bizId }]);
+  }
+
+  async function trackClick(e, bizId, type, url) {
+    await db.from('link_clicks').insert([{ business_id: bizId, link_type: type, link_url: url }]);
+  }
+
+  // Log search
+  const origSearch = doSearch;
+  async function logAndSearch() {
+    const q = document.getElementById('searchInput').value.trim();
+    if (q) await db.from('search_logs').insert([{ query: q, city: document.getElementById('cityInput').value.trim() }]);
+    origSearch();
+  }
+
+  loadAll();
+</script>
+</body>
+</html>
