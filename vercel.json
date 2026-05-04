@@ -1,0 +1,13 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/fetch-community-data",
+      "schedule": "0 */6 * * *"
+    }
+  ],
+  "functions": {
+    "api/cron/fetch-community-data.js": {
+      "maxDuration": 60
+    }
+  }
+}
